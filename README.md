@@ -32,7 +32,7 @@ Courier companies need a reliable backend system to manage parcels through their
 - [x] Deployment-ready configuration
 
 ### Planned (Day 2–5)
-- [ ] JWT Authentication (access + refresh tokens)
+- [ ] JWT Authentication (access tokens)
 - [ ] Google OAuth integration
 - [ ] Role-based access control (RBAC)
 - [ ] User management APIs
@@ -82,7 +82,7 @@ Modular architecture with strict separation of concerns.
 
 ## 🗄 Database
 
-- **9 Models**: User, RefreshToken, CourierProfile, Shipment, ShipmentAddress, ShipmentItem, Hub, Zone, ShipmentTrackingEvent
+- **8 Models**: User, CourierProfile, Shipment, ShipmentAddress, ShipmentItem, Hub, Zone, ShipmentTrackingEvent
 - **10 Enums**: UserRole, UserStatus, ShipmentStatus, PaymentStatus, AddressType, VehicleType, AvailabilityStatus, HubStatus, ZoneStatus, PackageType
 - **Soft delete** on User, Shipment, Hub
 - **Composite indexes** for performance
