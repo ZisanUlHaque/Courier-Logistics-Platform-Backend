@@ -1,16 +1,43 @@
-import { Router } from 'express'
-import { Role } from '../../../generated/prisma/enums'
-import { auth } from '../../middleware/checkAuth'
-import { AuthController } from './auth.controller'
+import { Router } from "express";
+import { auth } from "../../middleware/checkAuth";
+import { validateRequest } from "../../middleware/validateRequest";
+import { AuthController } from "./auth.controller";
+import { AuthValidation } from "./auth.validation";
+import { UserRole } from "../../../generated/prisma/enums";
 
-const router = Router()
+const router = Router();
 
-router.post('/register', AuthController.registerPatient)
-router.post('/login', AuthController.loginUser)
+router.post(
+  "/register",
+  validateRequest(AuthValidation.RegisterZodSchema),
+  AuthController.registerUser,
+);
+router.post(
+  "/verify-email",
+  validateRequest(AuthValidation.VerifyEmailZodSchema),
+  AuthController.verifyEmail,
+);
+router.post(
+  "/login",
+  validateRequest(AuthValidation.LoginZodSchema),
+  AuthController.loginUser,
+);
 router.get(
-    '/me',
-    auth(Role.ADMIN, Role.DOCTOR, Role.PATIENT, Role.SUPER_ADMIN),
-    AuthController.getMe,
-)
-router.post('/refresh-token', AuthController.refreshToken)
-export const AuthRoutes = router
+  "/me",
+  auth(UserRole.ADMIN, UserRole.CUSTOMER, UserRole.COURIER),
+  AuthController.getMe,
+);
+router.post("/refresh-token", AuthController.refreshToken);
+router.post("/google", AuthController.googleLogin);
+router.post(
+  "/forgot-password",
+  validateRequest(AuthValidation.ForgotPasswordZodSchema),
+  AuthController.forgotPassword,
+);
+router.post(
+  "/reset-password",
+  validateRequest(AuthValidation.ResetPasswordZodSchema),
+  AuthController.resetPassword,
+);
+
+export const AuthRoutes = router;

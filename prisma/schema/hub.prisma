@@ -11,12 +11,12 @@ model Hub {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  // Relations
   originShipments      Shipment[] @relation("OriginHubShipments")
   destinationShipments Shipment[] @relation("DestinationHubShipments")
   currentShipments     Shipment[] @relation("CurrentHubShipments")
 
   @@index([code])
   @@index([city])
+  @@index([status])
   @@map("hubs")
 }

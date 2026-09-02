@@ -7,11 +7,10 @@ model ShipmentTrackingEvent {
   createdBy   String?
   createdAt   DateTime       @default(now())
 
-  // Relations
   shipment Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
   creator  User?    @relation(fields: [createdBy], references: [id], onDelete: SetNull)
 
   @@index([shipmentId])
-  @@index([createdAt])
+  @@index([shipmentId, createdAt])
   @@map("shipment_tracking_events")
 }

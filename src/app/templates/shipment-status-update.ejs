@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shipment Update</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f7; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .header { background: linear-gradient(135deg, #2d6a9f, #3498db); padding: 30px; text-align: center; }
+    .header h1 { color: #ffffff; font-size: 24px; }
+    .body { padding: 30px; }
+    .greeting { font-size: 18px; color: #333; margin-bottom: 15px; }
+    .message { color: #555; font-size: 15px; line-height: 1.6; margin-bottom: 15px; }
+    .status-box { background: #eaf2f8; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; }
+    .status-label { color: #666; font-size: 13px; }
+    .status-value { font-size: 22px; font-weight: 700; color: #2d6a9f; margin-top: 5px; text-transform: uppercase; }
+    .tracking { color: #888; font-size: 14px; margin-top: 10px; }
+    .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #888; font-size: 12px; border-top: 1px solid #eee; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🚚 Shipment Update</h1>
+    </div>
+    <div class="body">
+      <p class="greeting">Hello <strong><%= name %></strong>,</p>
+      <p class="message"><%= description %></p>
+      <div class="status-box">
+        <p class="status-label">Current Status</p>
+        <p class="status-value"><%= status %></p>
+        <p class="tracking">Tracking: <%= trackingNumber %></p>
+        <% if (location) { %>
+          <p class="tracking">📍 <%= location %></p>
+        <% } %>
+      </div>
+    </div>
+    <div class="footer">
+      <p>&copy; 2026 CourierX Logistics. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,6 +1,6 @@
 model Shipment {
-  id                  String        @id @default(uuid())
-  trackingNumber      String        @unique
+  id                  String         @id @default(uuid())
+  trackingNumber      String         @unique
   customerId          String
   status              ShipmentStatus @default(PENDING_PAYMENT)
   paymentStatus       PaymentStatus  @default(UNPAID)
@@ -20,13 +20,12 @@ model Shipment {
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
 
-  // Relations
-  customer       User  @relation("CustomerShipments", fields: [customerId], references: [id], onDelete: Restrict)
-  courier        User? @relation("CourierShipments", fields: [courierId], references: [id], onDelete: SetNull)
-  
-  originHub      Hub?  @relation("OriginHubShipments", fields: [originHubId], references: [id], onDelete: SetNull)
-  destinationHub Hub?  @relation("DestinationHubShipments", fields: [destinationHubId], references: [id], onDelete: SetNull)
-  currentHub     Hub?  @relation("CurrentHubShipments", fields: [currentHubId], references: [id], onDelete: SetNull)
+  customer User  @relation("CustomerShipments", fields: [customerId], references: [id], onDelete: Restrict)
+  courier  User? @relation("CourierShipments", fields: [courierId], references: [id], onDelete: SetNull)
+
+  originHub      Hub? @relation("OriginHubShipments", fields: [originHubId], references: [id], onDelete: SetNull)
+  destinationHub Hub? @relation("DestinationHubShipments", fields: [destinationHubId], references: [id], onDelete: SetNull)
+  currentHub     Hub? @relation("CurrentHubShipments", fields: [currentHubId], references: [id], onDelete: SetNull)
 
   addresses      ShipmentAddress[]
   items          ShipmentItem[]
@@ -39,5 +38,6 @@ model Shipment {
   @@index([paymentStatus])
   @@index([createdAt])
   @@index([currentHubId])
+  @@index([customerId, status])
   @@map("shipments")
 }

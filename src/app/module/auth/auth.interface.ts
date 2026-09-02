@@ -1,29 +1,41 @@
 import { UserRole } from "../../../generated/prisma/enums";
 
-export interface RegisterInput {
+
+export interface IRegisterPayload {
   name: string;
   email: string;
   password: string;
   phone?: string;
-  role?: UserRole;
+  role?: "CUSTOMER" | "COURIER";
 }
 
-export interface LoginInput {
+export interface IVerifyEmailPayload {
+  email: string;
+  otp: string;
+}
+
+export interface ILoginUserPayload {
   email: string;
   password: string;
 }
 
-export interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
+export interface IGoogleLoginPayload {
+  idToken: string;
 }
 
-export interface AuthResponse {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    role: UserRole;
-  };
-  tokens: AuthTokens;
+export interface IForgotPasswordPayload {
+  email: string;
+}
+
+export interface IResetPasswordPayload {
+  email: string;
+  otp: string;
+  newPassword: string;
+}
+
+export interface IRequestUser {
+  userId: string;
+  name: string;
+  email: string;
+  role: UserRole;
 }

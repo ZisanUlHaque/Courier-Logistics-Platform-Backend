@@ -9,6 +9,11 @@ enum UserStatus {
   SUSPENDED
 }
 
+enum AuthProvider {
+  CREDENTIAL
+  GOOGLE
+}
+
 enum ShipmentStatus {
   PENDING_PAYMENT
   CONFIRMED
