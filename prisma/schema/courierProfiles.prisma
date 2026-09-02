@@ -1,0 +1,18 @@
+model CourierProfile {
+  id                 String             @id @default(uuid())
+  userId             String             @unique
+  vehicleType        VehicleType
+  vehicleNumber      String?
+  licenseNumber      String?
+  availabilityStatus AvailabilityStatus @default(OFFLINE)
+  currentLatitude    Float?
+  currentLongitude   Float?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([availabilityStatus])
+  @@map("courier_profiles")
+}

@@ -1,18 +1,73 @@
-enum Role {
-  SUPER_ADMIN
+enum UserRole {
+  CUSTOMER
+  COURIER
   ADMIN
-  DOCTOR
-  PATIENT
 }
 
 enum UserStatus {
   ACTIVE
-  BLOCKED
-  DELETED
+  SUSPENDED
 }
 
-enum Gender {
-  MALE
-  FEMALE
-  OTHER
+enum ShipmentStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  PICKUP_SCHEDULED
+  COURIER_ASSIGNED
+  PICKED_UP
+  AT_ORIGIN_HUB
+  IN_TRANSIT
+  AT_DESTINATION_HUB
+  OUT_FOR_DELIVERY
+  DELIVERED
+  DELIVERY_FAILED
+  RETURN_INITIATED
+  RETURN_IN_TRANSIT
+  RETURNED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum AddressType {
+  PICKUP
+  DELIVERY
+}
+
+enum VehicleType {
+  BICYCLE
+  MOTORCYCLE
+  VAN
+  TRUCK
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  BUSY
+  OFFLINE
+}
+
+enum HubStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ZoneStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum PackageType {
+  DOCUMENT
+  SMALL_PARCEL
+  MEDIUM_PARCEL
+  LARGE_PARCEL
+  FRAGILE
+  HAZARDOUS
 }

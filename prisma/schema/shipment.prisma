@@ -1,0 +1,43 @@
+model Shipment {
+  id                  String        @id @default(uuid())
+  trackingNumber      String        @unique
+  customerId          String
+  status              ShipmentStatus @default(PENDING_PAYMENT)
+  paymentStatus       PaymentStatus  @default(UNPAID)
+  packageType         PackageType    @default(SMALL_PARCEL)
+  weight              Float?
+  quantity            Int            @default(1)
+  declaredValue       Float?
+  deliveryFee         Float?
+  codAmount           Float?
+  specialInstructions String?
+  pickupSchedule      DateTime?
+  courierId           String?
+  originHubId         String?
+  destinationHubId    String?
+  currentHubId        String?
+  deletedAt           DateTime?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  // Relations
+  customer       User  @relation("CustomerShipments", fields: [customerId], references: [id], onDelete: Restrict)
+  courier        User? @relation("CourierShipments", fields: [courierId], references: [id], onDelete: SetNull)
+  
+  originHub      Hub?  @relation("OriginHubShipments", fields: [originHubId], references: [id], onDelete: SetNull)
+  destinationHub Hub?  @relation("DestinationHubShipments", fields: [destinationHubId], references: [id], onDelete: SetNull)
+  currentHub     Hub?  @relation("CurrentHubShipments", fields: [currentHubId], references: [id], onDelete: SetNull)
+
+  addresses      ShipmentAddress[]
+  items          ShipmentItem[]
+  trackingEvents ShipmentTrackingEvent[]
+
+  @@index([trackingNumber])
+  @@index([customerId])
+  @@index([courierId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([createdAt])
+  @@index([currentHubId])
+  @@map("shipments")
+}

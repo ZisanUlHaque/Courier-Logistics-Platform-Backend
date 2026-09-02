@@ -1,18 +1,28 @@
 model User {
-  id                 String     @id @default(uuid())
-  name               String
-  email              String
-  password           String
-  emailVerified      Boolean    @default(false)
-  role               Role       @default(PATIENT)
-  status             UserStatus @default(ACTIVE)
-  needPasswordChange Boolean    @default(false)
-  isDeleted          Boolean    @default(false)
-  deletedAt          DateTime?
-  createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @updatedAt
-  patient            Patient?
+  id            String     @id @default(uuid())
+  name          String
+  email         String     @unique
+  password      String?
+  phone         String?
+  profileImage  String?
+  role          UserRole   @default(CUSTOMER)
+  status        UserStatus @default(ACTIVE)
+  googleId      String?    @unique
+  emailVerified Boolean    @default(false)
+  deletedAt     DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
-  @@unique([email])
+
+  courierProfile CourierProfile?
+  
+  customerShipments Shipment[] @relation("CustomerShipments")
+  courierShipments  Shipment[] @relation("CourierShipments")
+  trackingEvents    ShipmentTrackingEvent[]
+
+  @@index([role])
+  @@index([status])
+  @@index([email])
+  @@index([role, status])
   @@map("users")
 }

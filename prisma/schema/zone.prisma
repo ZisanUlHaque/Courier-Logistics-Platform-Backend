@@ -1,0 +1,13 @@
+model Zone {
+  id        String     @id @default(uuid())
+  name      String
+  code      String     @unique
+  city      String
+  status    ZoneStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([code])
+  @@index([city])
+  @@map("zones")
+}

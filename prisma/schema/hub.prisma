@@ -1,0 +1,22 @@
+model Hub {
+  id        String    @id @default(uuid())
+  name      String
+  code      String    @unique
+  address   String
+  city      String
+  district  String
+  phone     String?
+  status    HubStatus @default(ACTIVE)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  originShipments      Shipment[] @relation("OriginHubShipments")
+  destinationShipments Shipment[] @relation("DestinationHubShipments")
+  currentShipments     Shipment[] @relation("CurrentHubShipments")
+
+  @@index([code])
+  @@index([city])
+  @@map("hubs")
+}

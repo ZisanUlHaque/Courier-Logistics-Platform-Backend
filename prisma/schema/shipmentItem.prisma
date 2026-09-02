@@ -1,0 +1,16 @@
+model ShipmentItem {
+  id            String   @id @default(uuid())
+  shipmentId    String
+  description   String
+  quantity      Int      @default(1)
+  weight        Float?
+  declaredValue Float?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  shipment Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  @@index([shipmentId])
+  @@map("shipment_items")
+}
