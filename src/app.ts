@@ -12,6 +12,7 @@ import { HubRoutes } from "./app/module/hub/hub.route";
 import { CourierRoutes } from "./app/module/courier/courier.route";
 import { TrackingRoutes } from "./app/module/tracking/tracking.route";
 import { PricingRoutes } from "./app/module/pricing/pricing.route";
+import { AdminRoutes } from "./app/module/admin/admin.route";
 
 const app: Application = express();
 
@@ -36,6 +37,7 @@ app.use("/api/v1/hubs", HubRoutes);
 app.use("/api/v1/couriers", CourierRoutes);
 app.use("/api/v1/tracking", TrackingRoutes);
 app.use("/api/v1/pricing", PricingRoutes);
+app.use("/api/v1/admin", AdminRoutes);
 
 // Basic route
 app.get("/", async (req: Request, res: Response) => {
