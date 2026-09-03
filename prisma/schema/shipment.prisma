@@ -30,6 +30,7 @@ model Shipment {
   addresses      ShipmentAddress[]
   items          ShipmentItem[]
   trackingEvents ShipmentTrackingEvent[]
+  payments       Payment[]
 
   @@index([trackingNumber])
   @@index([customerId])

@@ -1,0 +1,25 @@
+model Payment {
+    id                String                   @id @default(uuid())
+    shipmentId        String
+    customerId        String
+    transactionId     String?                  @unique
+    bkashPaymentId    String?                  @unique
+    amount            Float
+    currency          String                   @default("BDT")
+    method            PaymentMethod            @default(BKASH)
+    status            PaymentTransactionStatus @default(INITIATED)
+    paymentGatewayUrl String?
+    callbackRaw       Json?
+    paidAt            DateTime?
+    createdAt         DateTime                 @default(now())
+    updatedAt         DateTime                 @updatedAt
+
+    shipment Shipment @relation(fields: [shipmentId], references: [id], onDelete: Restrict)
+    customer User     @relation("CustomerPayments", fields: [customerId], references: [id], onDelete: Restrict)
+
+    @@index([shipmentId])
+    @@index([customerId])
+    @@index([status])
+    @@index([transactionId])
+    @@map("payments")
+}

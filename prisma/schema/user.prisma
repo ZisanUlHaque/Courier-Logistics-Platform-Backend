@@ -15,9 +15,10 @@ model User {
   updatedAt     DateTime     @updatedAt
 
   courierProfile    CourierProfile?
-  customerShipments Shipment[] @relation("CustomerShipments")
-  courierShipments  Shipment[] @relation("CourierShipments")
+  customerShipments Shipment[]              @relation("CustomerShipments")
+  courierShipments  Shipment[]              @relation("CourierShipments")
   trackingEvents    ShipmentTrackingEvent[]
+  customerPayments  Payment[]               @relation("CustomerPayments")
 
   @@index([role])
   @@index([status])

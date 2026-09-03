@@ -76,3 +76,19 @@ enum PackageType {
   FRAGILE
   HAZARDOUS
 }
+
+enum PaymentMethod {
+  BKASH
+  SSLCOMMERZ
+  STRIPE
+  COD
+}
+
+enum PaymentTransactionStatus {
+  INITIATED
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
