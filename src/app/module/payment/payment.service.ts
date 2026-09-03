@@ -1,5 +1,6 @@
 import httpStatus from "http-status";
 import type { PaymentWhereInput } from "../../../generated/prisma/models";
+
 import config from "../../config";
 import {
   createBkashPayment,
@@ -8,13 +9,13 @@ import {
 } from "../../lib/bkash";
 import { prisma } from "../../lib/prisma";
 import { AppError } from "../../utils/AppError";
+import type { IRequestUser, IPaymentQuery } from "./payment.interface";
 import { PaymentTransactionStatus, ShipmentStatus, UserRole } from "../../../generated/prisma/enums";
-import { IPaymentQuery, IRequestUser } from "./payment.interface";
 
 const initiatePayment = async (
   shipmentId: string,
   customerId: string,
-  method: string,
+  method: string
 ) => {
   const shipment = await prisma.shipment.findFirst({
     where: { id: shipmentId, customerId, deletedAt: null },
@@ -24,18 +25,52 @@ const initiatePayment = async (
     throw new AppError(httpStatus.NOT_FOUND, "Shipment not found");
   }
 
-  const existingCompletedPayment = await prisma.payment.findFirst({
+  const completedPayment = await prisma.payment.findFirst({
     where: {
       shipmentId,
       status: PaymentTransactionStatus.COMPLETED,
     },
   });
 
-  if (existingCompletedPayment) {
+  if (completedPayment) {
     throw new AppError(
       httpStatus.CONFLICT,
-      "Payment already completed for this shipment",
+      "Payment already completed for this shipment"
     );
+  }
+
+  const existingInitiatedPayment = await prisma.payment.findFirst({
+    where: {
+      shipmentId,
+      status: {
+        in: [
+          PaymentTransactionStatus.INITIATED,
+          PaymentTransactionStatus.PENDING,
+        ],
+      },
+      method: method as "BKASH" | "COD",
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+
+  if (existingInitiatedPayment && method === "BKASH") {
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+
+    if (existingInitiatedPayment.createdAt > thirtyMinutesAgo) {
+      return {
+        paymentId: existingInitiatedPayment.id,
+        bkashPaymentId: existingInitiatedPayment.bkashPaymentId,
+        bkashURL: existingInitiatedPayment.paymentGatewayUrl,
+        amount: existingInitiatedPayment.amount,
+        message: "Existing payment session returned (use this URL to pay)",
+      };
+    }
+
+    await prisma.payment.update({
+      where: { id: existingInitiatedPayment.id },
+      data: { status: PaymentTransactionStatus.CANCELLED },
+    });
   }
 
   const amount = shipment.deliveryFee || shipment.declaredValue || 100;
@@ -67,7 +102,7 @@ const initiatePayment = async (
   const bkashResponse = await createBkashPayment(
     amount,
     merchantInvoiceNumber,
-    callbackURL,
+    callbackURL
   );
 
   const payment = await prisma.payment.create({
@@ -88,16 +123,19 @@ const initiatePayment = async (
     bkashPaymentId: bkashResponse.paymentID,
     bkashURL: bkashResponse.bkashURL,
     amount,
+    message: "Redirect to bKash URL to complete payment",
   };
 };
 
 const bkashCallback = async (query: Record<string, string>) => {
   const { paymentID, status, shipmentId } = query;
 
+  console.log(" bKash Callback Received:", query);
+
   if (!paymentID || !shipmentId) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      "Missing parameters in bKash callback",
+      "Missing paymentID or shipmentId in callback"
     );
   }
 
@@ -107,6 +145,15 @@ const bkashCallback = async (query: Record<string, string>) => {
 
   if (!payment) {
     throw new AppError(httpStatus.NOT_FOUND, "Payment record not found");
+  }
+
+  if (payment.status === PaymentTransactionStatus.COMPLETED) {
+    return {
+      success: true,
+      message: "Payment already completed",
+      trxID: payment.transactionId,
+      redirectUrl: `${config.frontend_url}/payment/success?shipmentId=${shipmentId}`,
+    };
   }
 
   if (status === "cancel" || status === "failure") {
@@ -120,55 +167,109 @@ const bkashCallback = async (query: Record<string, string>) => {
 
     return {
       success: false,
-      message: "bKash Payment cancelled or failed",
+      message: "Payment was cancelled or failed",
       redirectUrl: `${config.frontend_url}/payment/failed?shipmentId=${shipmentId}`,
     };
   }
 
-  const executeResult = await executeBkashPayment(paymentID);
+  try {
+    const executeResult = await executeBkashPayment(paymentID);
 
-  if (executeResult.transactionStatus === "Completed") {
-    await prisma.$transaction(async (tx) => {
-      await tx.payment.update({
-        where: { id: payment.id },
-        data: {
-          status: PaymentTransactionStatus.COMPLETED,
-          transactionId: executeResult.trxID,
-          paidAt: new Date(),
-          callbackRaw: executeResult,
-        },
+    console.log(" bKash Execute Result:", executeResult);
+
+    if (executeResult.transactionStatus === "Completed") {
+      await prisma.$transaction(async (tx) => {
+        await tx.payment.update({
+          where: { id: payment.id },
+          data: {
+            status: PaymentTransactionStatus.COMPLETED,
+            transactionId: executeResult.trxID,
+            paidAt: new Date(),
+            callbackRaw: JSON.parse(JSON.stringify(executeResult)),
+          },
+        });
+
+        await tx.shipment.update({
+          where: { id: shipmentId },
+          data: {
+            paymentStatus: "PAID",
+            status: ShipmentStatus.CONFIRMED,
+          },
+        });
+
+        await tx.shipmentTrackingEvent.create({
+          data: {
+            shipmentId,
+            status: ShipmentStatus.CONFIRMED,
+            description: `bKash Payment Confirmed. TrxID: ${executeResult.trxID}`,
+          },
+        });
       });
 
-      await tx.shipment.update({
-        where: { id: shipmentId },
-        data: {
-          paymentStatus: "PAID",
-          status: ShipmentStatus.CONFIRMED,
-        },
-      });
+      return {
+        success: true,
+        message: "Payment completed successfully",
+        trxID: executeResult.trxID,
+        redirectUrl: `${config.frontend_url}/payment/success?shipmentId=${shipmentId}`,
+      };
+    }
 
-      await tx.shipmentTrackingEvent.create({
-        data: {
-          shipmentId,
-          status: ShipmentStatus.CONFIRMED,
-          description: `bKash Payment Verified. TrxID: ${executeResult.trxID}`,
-        },
-      });
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: {
+        status: PaymentTransactionStatus.FAILED,
+        callbackRaw: JSON.parse(JSON.stringify(executeResult)),
+      },
     });
 
     return {
-      success: true,
-      message: "Payment successfully completed",
-      trxID: executeResult.trxID,
-      redirectUrl: `${config.frontend_url}/payment/success?shipmentId=${shipmentId}`,
+      success: false,
+      message: `Payment execution returned: ${executeResult.transactionStatus}`,
+      redirectUrl: `${config.frontend_url}/payment/failed?shipmentId=${shipmentId}`,
+    };
+  } catch (error) {
+    console.error(" bKash Execute Error:", error);
+
+    try {
+      const queryResult = await queryBkashPayment(paymentID);
+
+      if (queryResult.transactionStatus === "Completed") {
+        await prisma.$transaction(async (tx) => {
+          await tx.payment.update({
+            where: { id: payment.id },
+            data: {
+              status: PaymentTransactionStatus.COMPLETED,
+              transactionId: queryResult.trxID,
+              paidAt: new Date(),
+            },
+          });
+
+          await tx.shipment.update({
+            where: { id: shipmentId },
+            data: {
+              paymentStatus: "PAID",
+              status: ShipmentStatus.CONFIRMED,
+            },
+          });
+        });
+
+        return {
+          success: true,
+          message: "Payment verified via query",
+          trxID: queryResult.trxID,
+          redirectUrl: `${config.frontend_url}/payment/success?shipmentId=${shipmentId}`,
+        };
+      }
+    } catch (queryError) {
+      console.error(" bKash Query also failed:", queryError);
+    }
+
+    return {
+      success: false,
+      message: "Payment verification failed. Please contact support.",
+      redirectUrl: `${config.frontend_url}/payment/failed?shipmentId=${shipmentId}`,
     };
   }
-
-  return {
-    success: false,
-    message: "Payment execution failed",
-    redirectUrl: `${config.frontend_url}/payment/failed?shipmentId=${shipmentId}`,
-  };
 };
 
 const verifyPayment = async (paymentId: string, user: IRequestUser) => {
@@ -186,7 +287,10 @@ const verifyPayment = async (paymentId: string, user: IRequestUser) => {
   }
 
   if (user.role === UserRole.CUSTOMER && payment.customerId !== user.userId) {
-    throw new AppError(httpStatus.FORBIDDEN, "Access denied to this payment");
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Access denied to this payment"
+    );
   }
 
   if (
@@ -210,7 +314,18 @@ const verifyPayment = async (paymentId: string, user: IRequestUser) => {
 
           await tx.shipment.update({
             where: { id: payment.shipmentId },
-            data: { paymentStatus: "PAID", status: ShipmentStatus.CONFIRMED },
+            data: {
+              paymentStatus: "PAID",
+              status: ShipmentStatus.CONFIRMED,
+            },
+          });
+
+          await tx.shipmentTrackingEvent.create({
+            data: {
+              shipmentId: payment.shipmentId,
+              status: ShipmentStatus.CONFIRMED,
+              description: `Payment verified via manual query. TrxID: ${bkashStatus.trxID}`,
+            },
           });
         });
 
@@ -234,7 +349,9 @@ const getMyPayments = async (query: IPaymentQuery, user: IRequestUser) => {
   const andConditions: PaymentWhereInput[] = [{ customerId: user.userId }];
 
   if (query.status) {
-    andConditions.push({ status: query.status as PaymentTransactionStatus });
+    andConditions.push({
+      status: query.status as PaymentTransactionStatus,
+    });
   }
 
   const [payments, total] = await prisma.$transaction([
@@ -272,7 +389,9 @@ const getAllPayments = async (query: IPaymentQuery) => {
   const andConditions: PaymentWhereInput[] = [];
 
   if (query.status) {
-    andConditions.push({ status: query.status as PaymentTransactionStatus });
+    andConditions.push({
+      status: query.status as PaymentTransactionStatus,
+    });
   }
 
   const [payments, total] = await prisma.$transaction([
@@ -282,8 +401,12 @@ const getAllPayments = async (query: IPaymentQuery) => {
       skip,
       orderBy: { [sortBy]: sortOrder },
       include: {
-        shipment: { select: { trackingNumber: true, status: true } },
-        customer: { select: { id: true, name: true, email: true } },
+        shipment: {
+          select: { trackingNumber: true, status: true },
+        },
+        customer: {
+          select: { id: true, name: true, email: true },
+        },
       },
     }),
     prisma.payment.count({ where: { AND: andConditions } }),
@@ -304,10 +427,15 @@ const getSinglePayment = async (paymentId: string, user: IRequestUser) => {
     },
   });
 
-  if (!payment) throw new AppError(httpStatus.NOT_FOUND, "Payment not found");
+  if (!payment) {
+    throw new AppError(httpStatus.NOT_FOUND, "Payment not found");
+  }
 
   if (user.role === UserRole.CUSTOMER && payment.customerId !== user.userId) {
-    throw new AppError(httpStatus.FORBIDDEN, "Access denied to this payment");
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Access denied to this payment"
+    );
   }
 
   return payment;
