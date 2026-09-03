@@ -1,5 +1,20 @@
 import { DEFAULT_LIMIT, DEFAULT_PAGE, MAX_LIMIT } from "../constants";
-import { PaginationMeta, PaginationQuery } from "../types/common";
+
+type PaginationQuery = {
+  page?: number | string;
+  limit?: number | string;
+  sortBy?: string;
+  sortOrder?: string;
+};
+
+type PaginationMeta = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+};
 
 export const parsePagination = (query: PaginationQuery) => {
   const page = Math.max(1, Number(query.page) || DEFAULT_PAGE);
