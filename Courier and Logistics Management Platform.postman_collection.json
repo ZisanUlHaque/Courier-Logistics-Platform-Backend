@@ -2,6 +2,7 @@
   "info": {
     "_postman_id": "181b2c22-5a89-465d-bffb-09ceb131e4ac",
     "name": "Courier and Logistics Management Platform",
+    "description": "StartFragment\n\n```\nCourier and Logistics Management Platform — API Documentation\nA scalable, production-ready backend platform designed to manage the end-to-end lifecycle of parcel delivery and logistics operations. \nBuilt with Node.js, TypeScript, Express, PostgreSQL, Prisma ORM, Upstash Redis, and bKash Tokenized Payment Gateway.\n\n ```\n\nEndFragment",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "49694011",
     "_collection_link": "https://go.postman.co/collection/49694011-181b2c22-5a89-465d-bffb-09ceb131e4ac?source=collection_link"
@@ -20,7 +21,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"Samin Ravi\",\n    \"email\": \"mentor.saminravi@gmail.com\",\n    \"password\": \"aA@@@12345678\",\n    \"patient\": {\n        \"contactNumber\": \"+8801700000000\"\n    }\n}",
+              "raw": "{\n    \"name\": \"Zisan\",\n    \"email\": \"mdzisanulhaque989@gmail.com\",\n    \"password\": \"aA@@@12345678\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -48,12 +49,7 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "const res = pm.response.json();",
-                  "",
-                  "if (res && res.data && res.data.accessToken) {",
-                  "    pm.collectionVariables.set(\"accessToken\", res.data.accessToken);",
-                  "    pm.collectionVariables.set(\"refreshToken\", res.data.refreshToken || \"\");",
-                  "}"
+                  ""
                 ],
                 "type": "text/javascript",
                 "packages": {},
@@ -69,7 +65,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"email\": \"mentor.saminravi@gmail.com\",\n    \"otp\": \"565173\"\n}",
+              "raw": "{\n    \"email\": \"mdzisanulhaque989@gmail.com\",\n    \"otp\": \"616791\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -97,12 +93,7 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "const res = pm.response.json();",
-                  "",
-                  "if (res && res.data && res.data.accessToken) {",
-                  "    pm.collectionVariables.set(\"accessToken\", res.data.accessToken);",
-                  "    pm.collectionVariables.set(\"refreshToken\", res.data.refreshToken || \"\");",
-                  "}"
+                  ""
                 ],
                 "type": "text/javascript",
                 "packages": {},
@@ -118,7 +109,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"email\": \"testerdoctor@gmail.com\",\n    \"password\": \"Tester@doctor12345\"\n}",
+              "raw": "{\n    \"email\": \"courier@example1.com\",\n    \"password\": \"Courier@12345\"\n\n    // \"email\": \"admin@example.com\",\n    // \"password\": \"Admin@12345\"\n\n    // \"email\": \"customer@example.com\",\n    // \"password\": \"Customer@12345\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -165,12 +156,7 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "const res = pm.response.json();",
-                  "",
-                  "if (res && res.data && res.data.accessToken) {",
-                  "    pm.collectionVariables.set(\"accessToken\", res.data.accessToken);",
-                  "    pm.collectionVariables.set(\"refreshToken\", res.data.refreshToken || \"\");",
-                  "}"
+                  ""
                 ],
                 "type": "text/javascript",
                 "packages": {},
@@ -208,7 +194,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"email\": \"saminravi.ph@gmail.com\"\n}",
+              "raw": "{\n    \"email\": \"mdzisanulhaque989@gmail.com\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -239,7 +225,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"email\": \"saminravi.ph@gmail.com\",\n    \"newPassword\": \"aA@@@12345678\",\n    \"otp\": \"123456\"\n}",
+              "raw": "{\n    \"email\": \"mdzisanulhaque989@gmail.com\",\n    \"newPassword\": \"aA@@@12345679\",\n    \"otp\": \"299964\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -260,8 +246,7 @@
           },
           "response": []
         }
-      ],
-      "description": "All seven credential-auth endpoints under `/api/v1/auth`. `Get Me` is gated by `auth(ADMIN, DOCTOR, PATIENT, SUPER_ADMIN)` — every role passes, so the gate really just means \"authenticated\". Password rule enforced by Zod on register/login/reset: min 8 chars, at least one lowercase, one uppercase, one digit, one special character."
+      ]
     },
     {
       "name": "Shipments",
