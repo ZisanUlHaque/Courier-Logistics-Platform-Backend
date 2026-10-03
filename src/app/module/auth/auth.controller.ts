@@ -23,14 +23,14 @@ const verifyEmail = catchAsync(async (req: Request, res: Response) => {
 
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
-    secure: config.node_env === "production",
-    sameSite: "none",
+    secure: config.node_env === "development" ? false : true,
+    sameSite: config.node_env === "development" ? "lax" : "none",
     maxAge: 86400000,
   });
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    secure: config.node_env === "production",
-    sameSite: "none",
+    secure: config.node_env === "development" ? false : true,
+    sameSite: config.node_env === "development" ? "lax" : "none",
     maxAge: 604800000,
   });
 
@@ -47,14 +47,14 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
 
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
-    secure: config.node_env === "production",
-    sameSite: "none",
+    secure: config.node_env === "development" ? false : true,
+    sameSite: config.node_env === "development" ? "lax" : "none",
     maxAge: 86400000,
   });
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    secure: config.node_env === "production",
-    sameSite: "none",
+    secure: config.node_env === "development" ? false : true,
+    sameSite: config.node_env === "development" ? "lax" : "none",
     maxAge: 604800000,
   });
 
@@ -87,14 +87,14 @@ const refreshTokenCtrl = catchAsync(async (req: Request, res: Response) => {
 
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
-    secure: config.node_env === "production",
-    sameSite: "none",
+    secure: config.node_env === "development" ? false : true,
+    sameSite: config.node_env === "development" ? "lax" : "none",
     maxAge: 86400000,
   });
   res.cookie("refreshToken", newRT, {
     httpOnly: true,
-    secure: config.node_env === "production",
-    sameSite: "none",
+    secure: config.node_env === "development" ? false : true,
+    sameSite: config.node_env === "development" ? "lax" : "none",
     maxAge: 604800000,
   });
 
@@ -111,14 +111,14 @@ const googleLogin = catchAsync(async (req: Request, res: Response) => {
 
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
-    secure: config.node_env === "production",
-    sameSite: "none",
+    secure: config.node_env === "development" ? false : true,
+    sameSite: config.node_env === "development" ? "lax" : "none",
     maxAge: 86400000,
   });
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    secure: config.node_env === "production",
-    sameSite: "none",
+    secure: config.node_env === "development" ? false : true,
+    sameSite: config.node_env === "development" ? "lax" : "none",
     maxAge: 604800000,
   });
 
@@ -150,6 +150,20 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const logout = catchAsync(async (req: Request, res: Response) => {
+
+
+  res.clearCookie("refreshToken")
+  res.clearCookie("accessToken")
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "User logout successfully",
+    data: null
+  });
+});
+
 export const AuthController = {
   registerUser,
   verifyEmail,
@@ -159,4 +173,5 @@ export const AuthController = {
   googleLogin,
   forgotPassword,
   resetPassword,
+  logout
 };

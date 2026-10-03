@@ -104,17 +104,6 @@ export const seedTesterCustomer = async () => {
 
 export const seedTesterCourier = async () => {
   try {
-    const isCourierExist = await prisma.user.findUnique({
-      where: {
-        email: config.tester_courier_email,
-      },
-    });
-
-    if (isCourierExist) {
-      console.log("Tester Courier already exists. Skipping Courier Seed.");
-      return;
-    }
-
     const name = config.tester_courier_name;
     const email = config.tester_courier_email;
     const password = config.tester_courier_password;
@@ -128,8 +117,36 @@ export const seedTesterCourier = async () => {
 
     const hashedPassword = await bcrypt.hash(password, Number(config.bcrypt_salt_rounds));
 
-    const courier = await prisma.user.create({
-      data: {
+    const courier = await prisma.user.upsert({
+      where: { email },
+      update: {
+        name,
+        password: hashedPassword,
+        role: UserRole.COURIER,
+        emailVerified: true,
+        status: UserStatus.ACTIVE,
+        courierProfile: {
+          upsert: {
+            create: {
+              vehicleType: VehicleType.MOTORCYCLE,
+              vehicleNumber: "DHK-METRO-HA-5522",
+              licenseNumber: "BRTA-DHK-88542",
+              availabilityStatus: AvailabilityStatus.AVAILABLE,
+              currentLatitude: 23.8103,
+              currentLongitude: 90.4125,
+            },
+            update: {
+              vehicleType: VehicleType.MOTORCYCLE,
+              vehicleNumber: "DHK-METRO-HA-5522",
+              licenseNumber: "BRTA-DHK-88542",
+              availabilityStatus: AvailabilityStatus.AVAILABLE,
+              currentLatitude: 23.8103,
+              currentLongitude: 90.4125,
+            },
+          },
+        },
+      },
+      create: {
         name,
         email,
         password: hashedPassword,
@@ -152,14 +169,9 @@ export const seedTesterCourier = async () => {
       },
     });
 
-    console.log("Tester Courier & Profile Seeded successfully:", courier.email);
+    console.log("Tester Courier ensured successfully:", courier.email);
   } catch (error) {
     console.log("Error Seeding Courier:", error);
-    try {
-      await prisma.user.delete({
-        where: { email: config.tester_courier_email },
-      });
-    } catch (cleanupErr) {}
   }
 };
 

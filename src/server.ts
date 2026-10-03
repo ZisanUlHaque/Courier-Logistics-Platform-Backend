@@ -18,8 +18,8 @@ const main = async () => {
     await transporter.verify();
     console.log("Nodemailer connect Successfully");
 
-    runMasterSeeder();
-    
+    await runMasterSeeder();
+
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });

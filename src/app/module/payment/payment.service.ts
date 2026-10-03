@@ -10,12 +10,16 @@ import {
 import { prisma } from "../../lib/prisma";
 import { AppError } from "../../utils/AppError";
 import type { IRequestUser, IPaymentQuery } from "./payment.interface";
-import { PaymentTransactionStatus, ShipmentStatus, UserRole } from "../../../generated/prisma/enums";
+import {
+  PaymentTransactionStatus,
+  ShipmentStatus,
+  UserRole,
+} from "../../../generated/prisma/enums";
 
 const initiatePayment = async (
   shipmentId: string,
   customerId: string,
-  method: string
+  method: string,
 ) => {
   const shipment = await prisma.shipment.findFirst({
     where: { id: shipmentId, customerId, deletedAt: null },
@@ -35,7 +39,7 @@ const initiatePayment = async (
   if (completedPayment) {
     throw new AppError(
       httpStatus.CONFLICT,
-      "Payment already completed for this shipment"
+      "Payment already completed for this shipment",
     );
   }
 
@@ -52,7 +56,6 @@ const initiatePayment = async (
     },
     orderBy: { createdAt: "desc" },
   });
-
 
   if (existingInitiatedPayment && method === "BKASH") {
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
@@ -90,7 +93,10 @@ const initiatePayment = async (
 
     await prisma.shipment.update({
       where: { id: shipmentId },
-      data: { paymentStatus: "PAID" },
+      data: {
+        paymentStatus: "PAID",
+        status: "CONFIRMED",
+      },
     });
 
     return payment;
@@ -102,7 +108,7 @@ const initiatePayment = async (
   const bkashResponse = await createBkashPayment(
     amount,
     merchantInvoiceNumber,
-    callbackURL
+    callbackURL,
   );
 
   const payment = await prisma.payment.create({
@@ -135,7 +141,7 @@ const bkashCallback = async (query: Record<string, string>) => {
   if (!paymentID || !shipmentId) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      "Missing paymentID or shipmentId in callback"
+      "Missing paymentID or shipmentId in callback",
     );
   }
 
@@ -287,10 +293,7 @@ const verifyPayment = async (paymentId: string, user: IRequestUser) => {
   }
 
   if (user.role === UserRole.CUSTOMER && payment.customerId !== user.userId) {
-    throw new AppError(
-      httpStatus.FORBIDDEN,
-      "Access denied to this payment"
-    );
+    throw new AppError(httpStatus.FORBIDDEN, "Access denied to this payment");
   }
 
   if (
@@ -332,8 +335,7 @@ const verifyPayment = async (paymentId: string, user: IRequestUser) => {
         payment.status = PaymentTransactionStatus.COMPLETED;
         payment.transactionId = bkashStatus.trxID;
       }
-    } catch {
-    }
+    } catch {}
   }
 
   return payment;
@@ -432,10 +434,7 @@ const getSinglePayment = async (paymentId: string, user: IRequestUser) => {
   }
 
   if (user.role === UserRole.CUSTOMER && payment.customerId !== user.userId) {
-    throw new AppError(
-      httpStatus.FORBIDDEN,
-      "Access denied to this payment"
-    );
+    throw new AppError(httpStatus.FORBIDDEN, "Access denied to this payment");
   }
 
   return payment;
