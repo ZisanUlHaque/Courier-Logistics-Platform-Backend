@@ -1,4 +1,22 @@
 import z from "zod";
+import { PaymentStatus, ShipmentStatus } from "../../../generated/prisma/enums";
+
+const GetAllShipmentsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+  status: z.enum(ShipmentStatus).optional(),
+  paymentStatus: z.enum(PaymentStatus).optional(),
+  courierId: z.uuid().optional(),
+  hubId: z.uuid().optional(),
+  search: z.string().trim().max(100).optional(),
+  fromDate: z.iso.date().optional(),
+  toDate: z.iso.date().optional(),
+  sortBy: z.enum(["createdAt", "updatedAt", "trackingNumber", "status"]).default("createdAt"),
+  sortOrder: z.enum(["asc", "desc"]).default("desc"),
+}).refine(
+  (query) => !query.fromDate || !query.toDate || query.fromDate <= query.toDate,
+  { message: "fromDate must be before or equal to toDate", path: ["fromDate"] },
+);
 
 const addressSchema = z.object({
   name: z.string().min(2),
@@ -61,4 +79,5 @@ const UpdateShipmentZodSchema = z.object({
 export const ShipmentValidation = {
   CreateShipmentZodSchema,
   UpdateShipmentZodSchema,
+  GetAllShipmentsQuerySchema,
 };

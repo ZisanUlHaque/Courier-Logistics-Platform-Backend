@@ -7,6 +7,7 @@ import { Prisma } from "../../../generated/prisma/client";
 const assignCourierToShipment = async (
   shipmentId: string,
   courierId: string,
+  adminId: string,
 ) => {
   const [shipment, courierUser] = await Promise.all([
     prisma.shipment.findFirst({ where: { id: shipmentId, deletedAt: null } }),
@@ -23,25 +24,52 @@ const assignCourierToShipment = async (
   if (!shipment) throw new AppError(httpStatus.NOT_FOUND, "Shipment not found");
   if (!courierUser)
     throw new AppError(httpStatus.NOT_FOUND, "Active courier not found");
+  if (
+    shipment.status !== "PICKUP_SCHEDULED" &&
+    shipment.status !== "COURIER_ASSIGNED"
+  ) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      `Cannot assign a courier in status: ${shipment.status}. Shipment must be pickup scheduled or awaiting pickup`,
+    );
+  }
+  if (shipment.courierId === courierId) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "This courier is already assigned to the shipment",
+    );
+  }
 
   return prisma.$transaction(async (tx) => {
-    const updated = await tx.shipment.update({
-      where: { id: shipmentId },
-      data: {
-        courierId,
-        status: "COURIER_ASSIGNED",
+    const updateResult = await tx.shipment.updateMany({
+      where: {
+        id: shipmentId,
+        status: shipment.status,
+        deletedAt: null,
       },
+      data: { courierId, status: "COURIER_ASSIGNED" },
     });
+
+    if (updateResult.count !== 1) {
+      throw new AppError(
+        httpStatus.CONFLICT,
+        "Shipment changed before the courier could be assigned",
+      );
+    }
 
     await tx.shipmentTrackingEvent.create({
       data: {
         shipmentId,
         status: "COURIER_ASSIGNED",
-        description: `Courier ${courierUser.name} assigned for shipment delivery`,
+        description:
+          shipment.courierId === null
+            ? `Courier ${courierUser.name} assigned for shipment delivery`
+            : `Courier reassigned to ${courierUser.name}`,
+        createdBy: adminId,
       },
     });
 
-    return updated;
+    return tx.shipment.findUniqueOrThrow({ where: { id: shipmentId } });
   });
 };
 

@@ -12,6 +12,7 @@ const addTrackingEvent = catchAsync(
     const result = await TrackingService.addTrackingEvent(
       req.params.shipmentId as string,
       req.user.userId,
+      req.user.role,
       req.body,
     );
     sendResponse(res, {

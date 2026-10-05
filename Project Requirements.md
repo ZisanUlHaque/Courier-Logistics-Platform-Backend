@@ -152,6 +152,14 @@ The supported statuses are:
 
 Alternative terminal or exception states include `DELIVERY_FAILED`, `RETURN_INITIATED`, `RETURN_IN_TRANSIT`, `RETURNED`, and `CANCELLED`.
 
+Status ownership is enforced by the API:
+
+- Successful payment sets `CONFIRMED`; payment status must not be changed through tracking events.
+- Admins schedule pickup and assign or reassign active couriers. Assignment is available only after pickup is scheduled and before pickup is completed.
+- The assigned courier records pickup, transit, delivery, and return milestones. Admins may record operational milestones when needed.
+- Customers may cancel through the shipment cancellation endpoint before pickup. Cancellation, courier assignment, and payment confirmation are not generic tracking-event updates.
+- Every accepted status change creates a tracking event. The API rejects invalid transitions, unauthorized status changes, and updates from couriers not assigned to the shipment.
+
 ## 8. Technical Requirements
 
 - Runtime: Node.js.

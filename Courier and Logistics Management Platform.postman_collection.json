@@ -761,7 +761,7 @@
                   "pm.test('Status 201', () => pm.response.to.have.status(201));",
                   "pm.test('Shipment status updated', () => {",
                   "  const res = pm.response.json();",
-                  "  pm.expect(res.data.shipment.status).to.equal('CONFIRMED');",
+                  "  pm.expect(res.data.shipment.status).to.equal('PICKUP_SCHEDULED');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -782,8 +782,9 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"CONFIRMED\",\n  \"description\": \"Payment received, shipment confirmed\",\n  \"location\": \"Dhaka Central Hub\"\n}"
+              "raw": "{\n  \"status\": \"PICKUP_SCHEDULED\",\n  \"description\": \"Pickup scheduled\",\n  \"location\": \"Dhaka Central Hub\"\n}"
             },
+            "description": "Admin-only operational status update. Use after payment has confirmed the shipment; courier assignment uses the dedicated Admin endpoint.",
             "url": {
               "raw": "{{baseUrl}}/tracking/{{shipmentId}}/events",
               "host": [

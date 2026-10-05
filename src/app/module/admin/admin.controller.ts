@@ -1,21 +1,27 @@
 import type { Request, Response } from "express";
 import httpStatus from "http-status";
+import { AppError } from "../../utils/AppError";
 import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
+import type { RequestWithUser } from "../../types/common";
 import { AdminService } from "./admin.service";
 
-const assignCourier = catchAsync(async (req: Request, res: Response) => {
-  const result = await AdminService.assignCourierToShipment(
-    req.params.id as string,
-    req.body.courierId,
-  );
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Courier assigned to shipment successfully",
-    data: result,
-  });
-});
+const assignCourier = catchAsync(
+  async (req: RequestWithUser, res: Response) => {
+    if (!req.user) throw new AppError(httpStatus.UNAUTHORIZED, "Unauthorized");
+    const result = await AdminService.assignCourierToShipment(
+      req.params.id as string,
+      req.body.courierId,
+      req.user.userId,
+    );
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Courier assigned to shipment successfully",
+      data: result,
+    });
+  },
+);
 
 const updateUserStatus = catchAsync(async (req: Request, res: Response) => {
   const result = await AdminService.updateUserStatus(

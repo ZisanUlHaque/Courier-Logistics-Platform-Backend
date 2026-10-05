@@ -206,6 +206,8 @@ PENDING_PAYMENT -> CONFIRMED -> PICKUP_SCHEDULED -> COURIER_ASSIGNED
 
 Exception states include `DELIVERY_FAILED`, `RETURN_INITIATED`, `RETURN_IN_TRANSIT`, `RETURNED`, and `CANCELLED`.
 
+Payment confirmation is handled by the payment flow; admins schedule pickups and assign active couriers; only the assigned courier can post courier updates. Admins can record operational milestones when needed, while customers cancel through the shipment cancellation endpoint before pickup. Every status change must follow the server-side transition rules and is recorded in the tracking timeline.
+
 ## Production Deployment Checklist
 
 1. Provision PostgreSQL, Redis, and SMTP access for the deployment environment.
