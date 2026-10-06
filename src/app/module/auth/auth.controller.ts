@@ -7,6 +7,13 @@ import { sendResponse } from "../../utils/sendResponse";
 import type { IRequestUser } from "./auth.interface";
 import { AuthService } from "./auth.service";
 
+const authCookieOptions = {
+  httpOnly: true,
+  secure: config.node_env !== "development",
+  sameSite: config.node_env === "development" ? ("lax" as const) : ("none" as const),
+  path: "/",
+};
+
 const registerUser = catchAsync(async (req: Request, res: Response) => {
   await AuthService.registerUser(req.body);
   sendResponse(res, {
@@ -22,15 +29,11 @@ const verifyEmail = catchAsync(async (req: Request, res: Response) => {
   const { accessToken, refreshToken, user } = result;
 
   res.cookie("accessToken", accessToken, {
-    httpOnly: true,
-    secure: config.node_env === "development" ? false : true,
-    sameSite: config.node_env === "development" ? "lax" : "none",
+    ...authCookieOptions,
     maxAge: 86400000,
   });
   res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: config.node_env === "development" ? false : true,
-    sameSite: config.node_env === "development" ? "lax" : "none",
+    ...authCookieOptions,
     maxAge: 604800000,
   });
 
@@ -46,15 +49,11 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
   const { accessToken, refreshToken } = await AuthService.loginUser(req.body);
 
   res.cookie("accessToken", accessToken, {
-    httpOnly: true,
-    secure: config.node_env === "development" ? false : true,
-    sameSite: config.node_env === "development" ? "lax" : "none",
+    ...authCookieOptions,
     maxAge: 86400000,
   });
   res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: config.node_env === "development" ? false : true,
-    sameSite: config.node_env === "development" ? "lax" : "none",
+    ...authCookieOptions,
     maxAge: 604800000,
   });
 
@@ -86,15 +85,11 @@ const refreshTokenCtrl = catchAsync(async (req: Request, res: Response) => {
   );
 
   res.cookie("accessToken", accessToken, {
-    httpOnly: true,
-    secure: config.node_env === "development" ? false : true,
-    sameSite: config.node_env === "development" ? "lax" : "none",
+    ...authCookieOptions,
     maxAge: 86400000,
   });
   res.cookie("refreshToken", newRT, {
-    httpOnly: true,
-    secure: config.node_env === "development" ? false : true,
-    sameSite: config.node_env === "development" ? "lax" : "none",
+    ...authCookieOptions,
     maxAge: 604800000,
   });
 
@@ -110,15 +105,11 @@ const googleLogin = catchAsync(async (req: Request, res: Response) => {
   const { accessToken, refreshToken } = await AuthService.googleLogin(req.body);
 
   res.cookie("accessToken", accessToken, {
-    httpOnly: true,
-    secure: config.node_env === "development" ? false : true,
-    sameSite: config.node_env === "development" ? "lax" : "none",
+    ...authCookieOptions,
     maxAge: 86400000,
   });
   res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: config.node_env === "development" ? false : true,
-    sameSite: config.node_env === "development" ? "lax" : "none",
+    ...authCookieOptions,
     maxAge: 604800000,
   });
 
@@ -151,16 +142,17 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
 });
 
 const logout = catchAsync(async (req: Request, res: Response) => {
-
-
-  res.clearCookie("refreshToken")
-  res.clearCookie("accessToken")
+  const legacyAuthCookieOptions = { ...authCookieOptions, path: "/api/v1/auth" };
+  for (const name of ["refreshToken", "accessToken"]) {
+    res.clearCookie(name, authCookieOptions);
+    res.clearCookie(name, legacyAuthCookieOptions);
+  }
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "User logout successfully",
-    data: null
+    data: null,
   });
 });
 
@@ -173,5 +165,5 @@ export const AuthController = {
   googleLogin,
   forgotPassword,
   resetPassword,
-  logout
+  logout,
 };
